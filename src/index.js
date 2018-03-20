@@ -42,7 +42,7 @@ function lev(i, j) {
 
   return Math.min(
       lev(i.substr(1), j) + 1,
-      lev(j.substr(1), i) + 1,
+      lev(i, j.substr(1)) + 1,
       lev(i.substr(1), j.substr(1)) + (i[0] !== j[0] ? 1 : 0)
   );
 }
@@ -108,7 +108,6 @@ function compare(phraseA, phraseB) {
   if (wordsA.length > wordsB.length)
     [wordsA, wordsB] = [wordsB, wordsA];
 
-  console.time("similarity");
   for (const wordA of wordsA) {
     const temp = [];
     for (const wordB of wordsB) {
@@ -117,20 +116,12 @@ function compare(phraseA, phraseB) {
 
     sumOfProbs += Math.max.apply(null, temp);
   }
-  console.timeEnd("similarity");
 
   return sumOfProbs / wordsA.length;
 }
 
 module.exports = robot => {
   robot.log('Yay, the app was loaded!')
-
-  console.log(
-    compare(
-      "Console is empty when creating a new app with utility module",
-      "When creating an app with the starter, the terminal is blank"
-    )
-  )
 
   robot.on([
     'issues.opened',
