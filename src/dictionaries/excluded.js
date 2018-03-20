@@ -1,0 +1,21 @@
+module.exports = [
+  'the',
+  'and',
+  'a',
+  'an',
+  'as',
+  'at',
+  'are',
+  'by',
+  'when',
+  'well',
+  'is',
+  'it',
+  'in',
+  'to',
+  'till',
+  'until',
+  'or',
+  'into',
+  'outo'
+];

@@ -1,3 +1,27 @@
+const excludes = require("./dictionaries/excluded");
+
+/**
+ * Removes common words from a given phrase for faster and more accurate
+ * results.
+ *
+ * @param   {string}  phrase
+ * @return  {string}
+ */
+function preparePhrase(phrase) {
+  phrase = phrase.toLowerCase();
+
+  // Basic punctuation:
+  phrase = phrase.replace(", ", " ");
+  phrase = phrase.replace(" - ", " ");
+  phrase = phrase.replace(". ", " ");
+
+  for (const exclude of excludes) {
+    phrase = phrase.replace(new RegExp(`${exclude} `, "g"), "");
+  }
+
+  return phrase;
+}
+
 /**
  * Levenshtein distance (lev) is a string metric for measuring the diff between
  * two sequences. Informally, the Levenshtein distance between two words is the
@@ -54,15 +78,13 @@ function lev2(a, b) {
 /**
  * Compares two strings and returns how similar they are (in percentage).
  *
- * @param   {string}    stringA
- * @param   {string}    stringB
+ * @param   {string}    i
+ * @param   {string}    j
  * @param   {Function}  fun       Levenshtein distance to use
  * @return  {float}
  */
-function similarity(stringA, stringB, fun = lev2) {
-  const length = Math.max(stringA.length, stringB.length);
-  const i = stringA.toLowerCase();
-  const j = stringB.toLowerCase();
+function similarity(i, j, fun = lev2) {
+  const length = Math.max(i.length, j.length);
 
   if (length === 0)
     return 1.0;
@@ -70,8 +92,45 @@ function similarity(stringA, stringB, fun = lev2) {
   return (length - fun(i, j)) / length;
 }
 
+/**
+ * Compares two phrases and returns how similar they are (in percentage).
+ *
+ * @param   {string}  phraseA
+ * @param   {string}  phraseB
+ * @return  {float}
+ */
+function compare(phraseA, phraseB) {
+  let wordsA = preparePhrase(phraseA).split(' ');
+  let wordsB = preparePhrase(phraseB).split(' ');
+  let sumOfProbs = 0;
+
+  // To be sure that A contains less words than B:
+  if (wordsA.length > wordsB.length)
+    [wordsA, wordsB] = [wordsB, wordsA];
+
+  console.time("similarity");
+  for (const wordA of wordsA) {
+    const temp = [];
+    for (const wordB of wordsB) {
+      temp.push(similarity(wordA, wordB));
+    }
+
+    sumOfProbs += Math.max.apply(null, temp);
+  }
+  console.timeEnd("similarity");
+
+  return sumOfProbs / wordsA.length;
+}
+
 module.exports = robot => {
   robot.log('Yay, the app was loaded!')
+
+  console.log(
+    compare(
+      "Console is empty when creating a new app with utility module",
+      "When creating an app with the starter, the terminal is blank"
+    )
+  )
 
   robot.on([
     'issues.opened',
@@ -83,18 +142,14 @@ module.exports = robot => {
       const response = await context.github.issues.getForRepo(context.repo());
       const issues = response.data.filter(i => i.number !== number);
 
-      robot.log.debug('Issue number:', number);
-      robot.log.debug('Issue title:', title);
-      robot.log.debug('Other issues:', issues.map(i => i.title));
-
       for (const issue of issues) {
-        console.time("similarity");
-        const percentage = similarity(issue.title, title);
-        console.timeEnd("similarity");
+        console.time("compare");
+        const percentage = compare(issue.title, title);
+        console.timeEnd("compare");
 
         robot.log(`${issue.title} ~ ${title} = ${percentage}%`);
 
-        if (percentage >= 0.70) {
+        if (percentage >= 0.60) {
            return await markAsDuplicate(issue.number);
         }
       }

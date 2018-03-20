@@ -6,7 +6,7 @@
   "license": "ISC",
   "repository": "https://github.com/Bartozzz/simple-github-bot.git",
   "scripts": {
-    "start": "probot run ./index.js",
+    "start": "probot run ./src/index.js",
     "test": "jest && standard"
   },
   "dependencies": {
