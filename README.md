@@ -1,15 +1,18 @@
-# simple-github-bot
+# `possible-duplicate` bot
 
-> a GitHub App built with [probot](https://github.com/probot/probot) that 
+A simple bot checking possible duplicates using [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance). The Levenshtein distance between two words is the minimum number of single-character edits required to change one word into the other. A single-character edit can be an _insertion_, _deletion_ or _substitution_.
+
+>**Disclaimer**: This project is created as a simple, demonstrating application for recruitment. This is probably not the best implementation available, although the code is tested and production-ready.
 
 ## Setup
 
-```sh
-# Install dependencies
-npm install
-
-# Run the bot
-npm start
+```bash
+$ npm install
+$ npm start
 ```
 
-See [docs/deploy.md](docs/deploy.md) if you would like to run your own instance of this app.
+## Deploying
+
+If you would like to run your own instance of this app, see the [docs for deployment](https://probot.github.io/docs/deployment/). This app requires these **permissions & events** for the GitHub App:
+
+- Issues - Read & Write
