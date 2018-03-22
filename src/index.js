@@ -23,56 +23,56 @@ function preparePhrase(phrase) {
 }
 
 /**
- * Levenshtein distance (lev) is a string metric for measuring the diff between
- * two sequences. Informally, the Levenshtein distance between two words is the
- * minimum number of single-character edits required to change one word into the
- * other. A character-edit includes insertions, deletions and substitutions.
+ * The Damerau–Levenshtein distance between two words is the minimum number of
+ * operations (consisting of insertions, deletions or substitutions of a single
+ * character, or transposition of two adjacent characters) required to change
+ * one word into the other.
  *
- * Recursive implementation, as described in the Wikipedia article:
  * @see     https://en.wikipedia.org/wiki/Levenshtein_distance
- * @todo    AN iterative implementation would be a lot faster
- *
- * @param   {string}  i
- * @param   {string}  j
- * @return  {number}
- */
-function lev(i, j) {
-  if (i.length === 0) return j.length;
-  if (j.length === 0) return i.length;
-
-  return Math.min(
-      lev(i.substr(1), j) + 1,
-      lev(i, j.substr(1)) + 1,
-      lev(i.substr(1), j.substr(1)) + (i[0] !== j[0] ? 1 : 0)
-  );
-}
-
-/**
- * Iterative implementation from:
+ * @see     https://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance
  * @see     https://rosettacode.org/wiki/Levenshtein_distance#JavaScript
  *
  * @param   {string}  a
  * @param   {string}  b
  * @return  {number}
  */
-function lev2(a, b) {
-  let t = [], u, i, j, m = a.length, n = b.length;
+function d(a, b) {
+  const [al, bl] = [a.length, b.length];
+	const matrix = [];
 
-  if (!m) { return n; }
-  if (!n) { return m; }
+  if (a === b) return 0;
+	if (!al) return bl;
+	if (!bl) return al;
 
-  for (j = 0; j <= n; j++) { t[j] = j; }
-  for (i = 1; i <= m; i++) {
-    for (u = [i], j = 1; j <= n; j++) {
-      u[j] = a[i - 1] === b[j - 1]
-        ? t[j - 1]
-        : Math.min(t[j - 1], t[j], u[j - 1]) + 1;
-    }
+	for (let i = 0; i <= al; i++) {
+		matrix[i] = [];
+		matrix[i][0] = i;
+	}
 
-    t = u;
-  }
+	for (let j = 0; j <= bl; j++) {
+		matrix[0][j] = j;
+	}
 
-  return u[n];
+	for (let i = 1; i <= al; i++) {
+		for (let j = 1; j <= bl; j++ ) {
+			let cost = a[i - 1] === b[j - 1] ? 0 : 1;
+
+			matrix[i][j] = Math.min(
+        matrix[i - 1][j + 0] + 1,   // deletion
+        matrix[i + 0][j - 1] + 1,   // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
+
+			if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        matrix[i][j] = Math.min(
+          matrix[i + 0][j + 0],
+          matrix[i - 2][j - 2] + cost // transposition
+        );
+			}
+		}
+	}
+
+	return matrix[al][bl];
 }
 
 /**
@@ -80,16 +80,15 @@ function lev2(a, b) {
  *
  * @param   {string}    i
  * @param   {string}    j
- * @param   {Function}  fun       Levenshtein distance to use
  * @return  {float}
  */
-function similarity(i, j, fun = lev2) {
+function similarity(i, j) {
   const length = Math.max(i.length, j.length);
 
   if (length === 0)
     return 1.0;
 
-  return (length - fun(i, j)) / length;
+  return (length - d(i, j)) / length;
 }
 
 /**
@@ -166,3 +165,5 @@ module.exports = robot => {
     }
   })
 }
+
+module.exports.d = d;
