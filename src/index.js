@@ -1,8 +1,9 @@
+const punctuation = require('./dictionaries/punctuation')
 const excludes = require('./dictionaries/excluded')
 
 /**
- * Removes common words from a given phrase for faster and more accurate
- * results.
+ * Removes punctuation and common words from a given phrase for faster and more
+ * accurate results.
  *
  * @param   {string}  phrase
  * @return  {string}
@@ -10,10 +11,9 @@ const excludes = require('./dictionaries/excluded')
 function preparePhrase (phrase) {
   phrase = phrase.toLowerCase()
 
-  // Basic punctuation:
-  phrase = phrase.replace(', ', ' ')
-  phrase = phrase.replace(' - ', ' ')
-  phrase = phrase.replace('. ', ' ')
+  for (const punct of punctuation) {
+    phrase = phrase.replace(new RegExp(`\\${punct}`, 'g'), ' ')
+  }
 
   for (const exclude of excludes) {
     phrase = phrase.replace(new RegExp(`${exclude} `, 'g'), '')
@@ -165,3 +165,4 @@ module.exports = robot => {
 }
 
 module.exports.d = d
+module.exports.preparePhrase = preparePhrase
