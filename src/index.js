@@ -156,13 +156,15 @@ module.exports = robot => {
      * @return  {Promise}
      */
     async function markAsDuplicate (relatedIssue) {
-      await context.github.issues.addLabels(context.issue({
+      const addLabelPromise = context.github.issues.addLabels(context.issue({
         labels: ['possible-duplicate']
       }))
 
-      await context.github.issues.createComment(context.issue({
+      const createCommentPromise = context.github.issues.createComment(context.issue({
         body: `Possible duplicate of #${relatedIssue}`
       }))
+      
+      await Promise.all([addLabelPromise, createCommentPromise])
     }
   })
 }
