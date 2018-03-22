@@ -1,4 +1,5 @@
 const punctuation = require('./dictionaries/punctuation')
+const synonyms = require('./dictionaries/synonyms')
 const excludes = require('./dictionaries/excluded')
 
 /**
@@ -13,6 +14,10 @@ function preparePhrase (phrase) {
 
   for (const punct of punctuation) {
     phrase = phrase.replace(new RegExp(`\\${punct}`, 'g'), ' ')
+  }
+
+  for (const key in synonyms) {
+    phrase = phrase.replace(new RegExp(synonyms[key].join('|'), 'gi'), key)
   }
 
   for (const exclude of excludes) {
@@ -84,10 +89,7 @@ function d (a, b) {
  */
 function similarity (i, j) {
   const length = Math.max(i.length, j.length)
-
-  if (length === 0) { return 1.0 }
-
-  return (length - d(i, j)) / length
+  return length === 0 ? 1.0 : (length - d(i, j)) / length
 }
 
 /**
@@ -166,4 +168,6 @@ module.exports = robot => {
 }
 
 module.exports.d = d
+module.exports.compare = compare
+module.exports.similarity = similarity
 module.exports.preparePhrase = preparePhrase
