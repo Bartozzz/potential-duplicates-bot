@@ -3,8 +3,8 @@ const synonyms = require('./dictionaries/synonyms')
 const excludes = require('./dictionaries/excluded')
 
 /**
- * Removes punctuation and common words from a given phrase for faster and more
- * accurate results.
+ * Removes punctuation and common words from a given phrase. Additionally, finds
+ * and remplaces predefined synonyms for even faster and more accurate results.
  *
  * @param   {string}  phrase
  * @return  {string}
@@ -16,8 +16,8 @@ function preparePhrase (phrase) {
     phrase = phrase.replace(new RegExp(`\\${punct}`, 'g'), ' ')
   }
 
-  for (const key in synonyms) {
-    phrase = phrase.replace(new RegExp(synonyms[key].join('|'), 'gi'), key)
+  for (const word in synonyms) {
+    phrase = phrase.replace(new RegExp(synonyms[word].join('|'), 'gi'), word)
   }
 
   for (const exclude of excludes) {
@@ -41,7 +41,7 @@ function preparePhrase (phrase) {
  * @param   {string}  b
  * @return  {number}
  */
-function d (a, b) {
+function distance (a, b) {
   const [al, bl] = [a.length, b.length]
   const matrix = []
 
@@ -81,7 +81,8 @@ function d (a, b) {
 }
 
 /**
- * Compares two strings and returns how similar they are (in percentage).
+ * Compares two strings and returns how similar they are. The result is a float
+ * in interval [0.0; 1.0].
  *
  * @param   {string}    i
  * @param   {string}    j
@@ -89,11 +90,22 @@ function d (a, b) {
  */
 function similarity (i, j) {
   const length = Math.max(i.length, j.length)
-  return length === 0 ? 1.0 : (length - d(i, j)) / length
+  return length === 0 ? 1.0 : (length - distance(i, j)) / length
 }
 
 /**
- * Compares two phrases and returns how similar they are (in percentage).
+ * Compares two phrases and returns how similar they are. The results is a float
+ * in interval [0.0; 1.0]. The algorithm works as follows:
+ *
+ * 1. Preparation:
+ *    Common words, punctuation symbols and synonyms are removed. Sentences are
+ *    then split into separate words for further analysis.
+ * 2. Calculations:
+ *    For each word in the first phrase, we try to find a analogue in the second
+ *    one. This is done using the Damerau–Levenshtein distance algorithm. Words
+ *    with the biggest probability of being an analogue are added to the list.
+ *
+ * @todo    include phrase-length difference in the observational error
  *
  * @param   {string}  phraseA
  * @param   {string}  phraseB
@@ -105,7 +117,9 @@ function compare (phraseA, phraseB) {
   let sumOfProbs = 0
 
   // To be sure that A contains less words than B:
-  if (wordsA.length > wordsB.length) { [wordsA, wordsB] = [wordsB, wordsA] }
+  if (wordsA.length > wordsB.length) {
+    [wordsA, wordsB] = [wordsB, wordsA]
+  }
 
   for (const wordA of wordsA) {
     const temp = []
@@ -156,20 +170,20 @@ module.exports = robot => {
      * @return  {Promise}
      */
     async function markAsDuplicate (relatedIssue) {
-      const addLabelPromise = context.github.issues.addLabels(context.issue({
+      const addLabel = context.github.issues.addLabels(context.issue({
         labels: ['possible-duplicate']
       }))
 
-      const createCommentPromise = context.github.issues.createComment(context.issue({
+      const createComment = context.github.issues.createComment(context.issue({
         body: `Possible duplicate of #${relatedIssue}`
       }))
-      
-      await Promise.all([addLabelPromise, createCommentPromise])
+
+      await Promise.all([addLabel, createComment])
     }
   })
 }
 
-module.exports.d = d
+module.exports.distance = distance
 module.exports.compare = compare
 module.exports.similarity = similarity
 module.exports.preparePhrase = preparePhrase

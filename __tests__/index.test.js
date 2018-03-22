@@ -1,4 +1,4 @@
-const damlev = require('../src/index').d
+const distance = require('../src/index').distance
 const preparePhrase = require('../src/index').preparePhrase
 
 test('Preparing phrase', () => {
@@ -28,5 +28,5 @@ test('Damerau–Levenshtein distance', () => {
     ['mississippi', 'swiss miss', 8]
   ]
 
-  tests.forEach(v => expect(damlev(v[0], v[1])).toBe(v[2]))
+  tests.forEach(v => expect(distance(v[0], v[1])).toBe(v[2]))
 })

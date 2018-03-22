@@ -1,3 +1,4 @@
+// NOTE words to be removed from each phrase
 module.exports = [
   'the',
   'and',
