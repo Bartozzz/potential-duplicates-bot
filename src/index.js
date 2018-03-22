@@ -1,4 +1,4 @@
-const excludes = require("./dictionaries/excluded");
+const excludes = require('./dictionaries/excluded')
 
 /**
  * Removes common words from a given phrase for faster and more accurate
@@ -7,19 +7,19 @@ const excludes = require("./dictionaries/excluded");
  * @param   {string}  phrase
  * @return  {string}
  */
-function preparePhrase(phrase) {
-  phrase = phrase.toLowerCase();
+function preparePhrase (phrase) {
+  phrase = phrase.toLowerCase()
 
   // Basic punctuation:
-  phrase = phrase.replace(", ", " ");
-  phrase = phrase.replace(" - ", " ");
-  phrase = phrase.replace(". ", " ");
+  phrase = phrase.replace(', ', ' ')
+  phrase = phrase.replace(' - ', ' ')
+  phrase = phrase.replace('. ', ' ')
 
   for (const exclude of excludes) {
-    phrase = phrase.replace(new RegExp(`${exclude} `, "g"), "");
+    phrase = phrase.replace(new RegExp(`${exclude} `, 'g'), '')
   }
 
-  return phrase;
+  return phrase
 }
 
 /**
@@ -36,43 +36,43 @@ function preparePhrase(phrase) {
  * @param   {string}  b
  * @return  {number}
  */
-function d(a, b) {
-  const [al, bl] = [a.length, b.length];
-	const matrix = [];
+function d (a, b) {
+  const [al, bl] = [a.length, b.length]
+  const matrix = []
 
-  if (a === b) return 0;
-	if (!al) return bl;
-	if (!bl) return al;
+  if (a === b) return 0
+  if (!al) return bl
+  if (!bl) return al
 
-	for (let i = 0; i <= al; i++) {
-		matrix[i] = [];
-		matrix[i][0] = i;
-	}
+  for (let i = 0; i <= al; i++) {
+    matrix[i] = []
+    matrix[i][0] = i
+  }
 
-	for (let j = 0; j <= bl; j++) {
-		matrix[0][j] = j;
-	}
+  for (let j = 0; j <= bl; j++) {
+    matrix[0][j] = j
+  }
 
-	for (let i = 1; i <= al; i++) {
-		for (let j = 1; j <= bl; j++ ) {
-			let cost = a[i - 1] === b[j - 1] ? 0 : 1;
+  for (let i = 1; i <= al; i++) {
+    for (let j = 1; j <= bl; j++) {
+      let cost = a[i - 1] === b[j - 1] ? 0 : 1
 
-			matrix[i][j] = Math.min(
+      matrix[i][j] = Math.min(
         matrix[i - 1][j + 0] + 1,   // deletion
         matrix[i + 0][j - 1] + 1,   // insertion
         matrix[i - 1][j - 1] + cost // substitution
-      );
+      )
 
-			if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
         matrix[i][j] = Math.min(
           matrix[i + 0][j + 0],
           matrix[i - 2][j - 2] + cost // transposition
-        );
-			}
-		}
-	}
+        )
+      }
+    }
+  }
 
-	return matrix[al][bl];
+  return matrix[al][bl]
 }
 
 /**
@@ -82,13 +82,12 @@ function d(a, b) {
  * @param   {string}    j
  * @return  {float}
  */
-function similarity(i, j) {
-  const length = Math.max(i.length, j.length);
+function similarity (i, j) {
+  const length = Math.max(i.length, j.length)
 
-  if (length === 0)
-    return 1.0;
+  if (length === 0) { return 1.0 }
 
-  return (length - d(i, j)) / length;
+  return (length - d(i, j)) / length
 }
 
 /**
@@ -98,25 +97,24 @@ function similarity(i, j) {
  * @param   {string}  phraseB
  * @return  {float}
  */
-function compare(phraseA, phraseB) {
-  let wordsA = preparePhrase(phraseA).split(' ');
-  let wordsB = preparePhrase(phraseB).split(' ');
-  let sumOfProbs = 0;
+function compare (phraseA, phraseB) {
+  let wordsA = preparePhrase(phraseA).split(' ')
+  let wordsB = preparePhrase(phraseB).split(' ')
+  let sumOfProbs = 0
 
   // To be sure that A contains less words than B:
-  if (wordsA.length > wordsB.length)
-    [wordsA, wordsB] = [wordsB, wordsA];
+  if (wordsA.length > wordsB.length) { [wordsA, wordsB] = [wordsB, wordsA] }
 
   for (const wordA of wordsA) {
-    const temp = [];
+    const temp = []
     for (const wordB of wordsB) {
-      temp.push(similarity(wordA, wordB));
+      temp.push(similarity(wordA, wordB))
     }
 
-    sumOfProbs += Math.max.apply(null, temp);
+    sumOfProbs += Math.max.apply(null, temp)
   }
 
-  return sumOfProbs / wordsA.length;
+  return sumOfProbs / wordsA.length
 }
 
 module.exports = robot => {
@@ -124,27 +122,27 @@ module.exports = robot => {
 
   robot.on([
     'issues.opened',
-    'issues.edited',
+    'issues.edited'
   ], async context => {
-    const {title, number} = context.payload.issue;
+    const {title, number} = context.payload.issue
 
     try {
-      const response = await context.github.issues.getForRepo(context.repo());
-      const issues = response.data.filter(i => i.number !== number);
+      const response = await context.github.issues.getForRepo(context.repo())
+      const issues = response.data.filter(i => i.number !== number)
 
       for (const issue of issues) {
-        console.time("compare");
-        const percentage = compare(issue.title, title);
-        console.timeEnd("compare");
+        console.time('compare')
+        const percentage = compare(issue.title, title)
+        console.timeEnd('compare')
 
-        robot.log(`${issue.title} ~ ${title} = ${percentage}%`);
+        robot.log(`${issue.title} ~ ${title} = ${percentage}%`)
 
         if (percentage >= 0.60) {
-           return await markAsDuplicate(issue.number);
+          return await markAsDuplicate(issue.number)
         }
       }
     } catch (error) {
-      robot.log.fatal(error, 'Something went wrong!');
+      robot.log.fatal(error, 'Something went wrong!')
     }
 
     /**
@@ -154,16 +152,16 @@ module.exports = robot => {
      * @param   {number}  relatedIssue
      * @return  {Promise}
      */
-    async function markAsDuplicate(relatedIssue) {
+    async function markAsDuplicate (relatedIssue) {
       await context.github.issues.addLabels(context.issue({
         labels: ['possible-duplicate']
-      }));
+      }))
 
       return await context.github.issues.createComment(context.issue({
         body: `Possible duplicate of #${relatedIssue}`
-      }));
+      }))
     }
   })
 }
 
-module.exports.d = d;
+module.exports.d = d

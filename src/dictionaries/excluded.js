@@ -18,4 +18,4 @@ module.exports = [
   'or',
   'into',
   'outo'
-];
+]
