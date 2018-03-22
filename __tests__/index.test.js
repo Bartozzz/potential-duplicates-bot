@@ -1,4 +1,15 @@
 const damlev = require('../src/index').d
+const preparePhrase = require('../src/index').preparePhrase
+
+test('Preparing phrase', () => {
+  const tests = [
+    ['Hello World', 'hello world'],
+    ['Basic, punct. should - be removed.. ', 'basic punct should be removed '],
+    ['the excluded words and stuff', 'excluded words stuff']
+  ]
+
+  tests.forEach(v => expect(preparePhrase(v[0])).toBe(v[1]))
+})
 
 test('Damerau–Levenshtein distance', () => {
   const tests = [

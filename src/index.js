@@ -138,7 +138,8 @@ module.exports = robot => {
         robot.log(`${issue.title} ~ ${title} = ${percentage}%`)
 
         if (percentage >= 0.60) {
-          return await markAsDuplicate(issue.number)
+          await markAsDuplicate(issue.number)
+          return
         }
       }
     } catch (error) {
@@ -157,7 +158,7 @@ module.exports = robot => {
         labels: ['possible-duplicate']
       }))
 
-      return await context.github.issues.createComment(context.issue({
+      await context.github.issues.createComment(context.issue({
         body: `Possible duplicate of #${relatedIssue}`
       }))
     }
