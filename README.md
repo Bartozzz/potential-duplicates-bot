@@ -1,11 +1,10 @@
 # `possible-duplicate` bot
 
-A simple bot searching for possible duplicates using [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance). The Levenshtein distance between two words is the minimum number of single-character edits required to change one word into the other. A single-character edit can be an _insertion_, _deletion_ or _substitution_.
+A simple bot searching for possible duplicates using [Damerau–Levenshtein](https://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance). The Damerau–Levenshtein distance between two words is the minimum number of operations (consisting of insertions, deletions or substitutions of a single character, or transposition of two adjacent characters) required to change one word into the other. It also detects predefined synonyms to better results.
 
 >**Disclaimer**: This project is created as a simple, demonstrating application for GSoC recruitment. This is probably not the best implementation available.
 
 **Some ideas for improvement:**
-- _synonyms detection_ (e.g. `terminal`/`console`/`cli`);
 - a better `compare` function which would _include phrase-length difference in the observational error_ (right now, for the sake of simplicity, it is completely ignored and we are comparing based on the shorter phrase);
 
 ## Setup
