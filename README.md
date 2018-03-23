@@ -15,7 +15,7 @@ $ npm start
 
 ## Usage
 
-First, you need to install [our Github App](https://github.com/apps/potential-duplicates). Then, you can create a custom configuration file at `.github/potential-duplicates.yml`. If this file doesn't exists, default settings will be used:
+~~First, you need to install [our Github App](https://github.com/apps/potential-duplicates).~~ First, you need to deploy our Github App manually. Then, you can create a custom configuration file at `.github/potential-duplicates.yml`. If this file doesn't exists, default settings will be used:
 
 ```yml
 # Label name and color to set, when potential duplicates are detected
