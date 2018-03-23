@@ -1,7 +1,8 @@
+const mustache = require('mustache')
 const punctuation = require('./dictionaries/punctuation')
 const synonyms = require('./dictionaries/synonyms')
 const excludes = require('./dictionaries/excluded')
-const config = require('./config')
+const schema = require('./config')
 
 const CONFIG_NAME = 'potential-duplicates.yml'
 // How many points remove per missing word (see `compare()`):
@@ -159,27 +160,38 @@ module.exports = robot => {
     'issues.edited'
   ], async context => {
     const {title, number} = context.payload.issue
-    const {error, value} = config.validate(context.config(CONFIG_NAME))
+    const {error, value} = schema.validate(context.config(CONFIG_NAME))
 
     if (error) {
       robot.log.fatal(error, 'Invalid config')
     }
 
     try {
+      const duplicates = []
       const response = await context.github.issues.getForRepo(context.repo())
       const issues = response.data.filter(i => i.number !== number)
 
       for (const issue of issues) {
         console.time('compare')
-        const percentage = compare(issue.title, title)
+        const accuracy = compare(issue.title, title)
         console.timeEnd('compare')
 
-        robot.log(`${issue.title} ~ ${title} = ${percentage}%`)
+        robot.log(`${issue.title} ~ ${title} = ${accuracy}%`)
 
-        if (percentage >= value.threshold) {
-          await markAsDuplicate(issue.number)
-          return
+        if (accuracy >= value.threshold) {
+          duplicates.push({
+            number: issue.number,
+            title: issue.title,
+            accuracy: parseInt(accuracy * 100)
+          })
         }
+      }
+
+      if (duplicates.length) {
+        console.log(mustache.render(value.referenceComment, {
+          issues: duplicates
+        }));
+        await markAsDuplicate(duplicates)
       }
     } catch (error) {
       robot.log.fatal(error, 'Something went wrong!')
@@ -187,18 +199,20 @@ module.exports = robot => {
 
     /**
      * Marks an issue as duplicate with a corresponding label and adds a comment
-     * referencing the duplicated issue.
+     * referencing the duplicated issues.
      *
-     * @param   {number}  relatedIssue
+     * @param   {Array<Object>}   relatedIssues
      * @return  {Promise}
      */
-    async function markAsDuplicate (relatedIssue) {
+    async function markAsDuplicate (relatedIssues) {
       const addLabel = context.github.issues.addLabels(context.issue({
         labels: [value.issueLabel]
       }))
 
       const createComment = context.github.issues.createComment(context.issue({
-        body: `${value.referenceComment}#${relatedIssue}`
+        body: mustache.render(value.referenceComment, {
+          issues: relatedIssues
+        })
       }))
 
       try {

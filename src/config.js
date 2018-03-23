@@ -23,6 +23,9 @@ module.exports = Joi.object().keys({
   labelColor: fields.labelColor.default('cfd3d7'),
   threshold: fields.threshold.default(0.60),
   referenceComment: fields.referenceComment.default(
-    'Possible duplicate of '
+    'Potential duplicates: \n' +
+    '{{#issues}}' +
+    '- [#{{ number }}] {{ title }} ({{ accuracy }}%) \n' +
+    '{{/issues}}'
   )
 })

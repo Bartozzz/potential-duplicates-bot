@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "joi": "^13.1.2",
+    "mustache": "2.3.0",
     "probot": "^6.0.0"
   },
   "devDependencies": {

@@ -25,7 +25,10 @@ threshold: 0.60
 
 # Comment to post when potential duplicates are detected
 referenceComment: >
-  Possible duplicate of 
+  Potential duplicates:
+  {{#issues}}
+    - [#{{ number }}] {{ title }} ({{ accuracy }}%)
+  {{/issues}}
 ```
 
 ## Deploying
