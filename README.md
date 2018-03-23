@@ -2,6 +2,8 @@
 
 A simple, configurable bot searching for potential issue duplicates using [Damerau–Levenshtein](https://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance) algorithm. The Damerau–Levenshtein distance between two words is the minimum number of operations (consisting of insertions, deletions or substitutions of a single character, or transposition of two adjacent characters) required to change one word into the other. It also detects predefined synonyms for even better results.
 
+![Demo](https://i.imgur.com/mZrLqPe.png)
+
 ## Setup
 
 For more information, see the [documentation for Probot](https://github.com/probot/probot).
