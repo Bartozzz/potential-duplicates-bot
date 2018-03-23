@@ -181,8 +181,8 @@ module.exports = robot => {
     }
 
     /**
-     * Marks a functions as duplicate with a corresponding label and adds a
-     * comment referencing the duplicated issue.
+     * Marks an issue as duplicate with a corresponding label and adds a comment
+     * referencing the duplicated issue.
      *
      * @param   {number}  relatedIssue
      * @return  {Promise}
@@ -196,7 +196,11 @@ module.exports = robot => {
         body: `Possible duplicate of #${relatedIssue}`
       }))
 
-      await Promise.all([addLabel, createComment])
+      try {
+        await Promise.all([addLabel, createComment])
+      } catch (error) {
+        robot.log.fatal(error, 'Could not mark as duplicate!')
+      }
     }
   })
 }
