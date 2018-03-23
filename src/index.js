@@ -1,9 +1,9 @@
 const punctuation = require('./dictionaries/punctuation')
 const synonyms = require('./dictionaries/synonyms')
 const excludes = require('./dictionaries/excluded')
+const config = require('./config')
 
-// If the similarity score is higher, the issue will be marked as a duplicate:
-const THRESHOLD = 0.60
+const CONFIG_NAME = 'potential-duplicates.yml'
 // How many points remove per missing word (see `compare()`):
 const ERROR_ADJ = 0.15
 
@@ -159,6 +159,11 @@ module.exports = robot => {
     'issues.edited'
   ], async context => {
     const {title, number} = context.payload.issue
+    const {error, value} = config.validate(context.config(CONFIG_NAME))
+
+    if (error) {
+      robot.log.fatal(error, 'Invalid config')
+    }
 
     try {
       const response = await context.github.issues.getForRepo(context.repo())
@@ -171,7 +176,7 @@ module.exports = robot => {
 
         robot.log(`${issue.title} ~ ${title} = ${percentage}%`)
 
-        if (percentage >= THRESHOLD) {
+        if (percentage >= value.threshold) {
           await markAsDuplicate(issue.number)
           return
         }
@@ -189,11 +194,11 @@ module.exports = robot => {
      */
     async function markAsDuplicate (relatedIssue) {
       const addLabel = context.github.issues.addLabels(context.issue({
-        labels: ['possible-duplicate']
+        labels: [value.issueLabel]
       }))
 
       const createComment = context.github.issues.createComment(context.issue({
-        body: `Possible duplicate of #${relatedIssue}`
+        body: `${value.referenceComment}#${relatedIssue}`
       }))
 
       try {
@@ -209,5 +214,3 @@ module.exports.distance = distance
 module.exports.compare = compare
 module.exports.prepare = prepare
 module.exports.similarity = similarity
-module.exports.THRESHOLD = THRESHOLD
-module.exports.ERROR_ADJ = ERROR_ADJ

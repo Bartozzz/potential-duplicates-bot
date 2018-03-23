@@ -1,7 +1,6 @@
 const distance = require('../src/index').distance
 const compare = require('../src/index').compare
 const prepare = require('../src/index').prepare
-const THRESHOLD = require('../src/index').THRESHOLD
 
 test('Preparing phrase', () => {
   const tests = [
@@ -24,7 +23,7 @@ test('Comparing phrases', () => {
     [false, 'Lorem ipsum dolor sit amet', 'consectetur adipiscing elit']
   ]
 
-  tests.forEach(v => expect(compare(v[1], v[2]) > THRESHOLD).toBe(v[0]))
+  tests.forEach(v => expect(compare(v[1], v[2]) > 0.60).toBe(v[0]))
 })
 
 test('Damerau–Levenshtein distance', () => {

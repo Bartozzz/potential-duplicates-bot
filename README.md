@@ -11,6 +11,23 @@ $ npm install
 $ npm start
 ```
 
+## Usage
+
+First, you need to install [our Github App](https://github.com/apps/potential-duplicates). Then, you can create a custom configuration file at `.github/potential-duplicates.yml`. If this file doesn't exists, default settings will be used:
+
+```yml
+# Label name and color to set, when potential duplicates are detected
+issueLabel: potential-duplicate
+labelColor: cfd3d7
+
+# If similarity is higher than this threshold, issue will be marked as duplicate
+threshold: 0.60
+
+# Comment to post when potential duplicates are detected
+referenceComment: >
+  Possible duplicate of 
+```
+
 ## Deploying
 
-If you would like to run your own instance of this app, see the [docs for deployment](https://probot.github.io/docs/deployment/). This app requires `Issues - Read & Write` permissions & events.
+If you would like to run your own instance of this app, see the [docs for deployment](https://probot.github.io/docs/deployment/). This app requires both `Issues – Read & Write` and `Single File – Read` (`.github/potential-duplicates.yml`) permissions & events.
