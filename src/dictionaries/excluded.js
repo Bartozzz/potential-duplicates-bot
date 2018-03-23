@@ -17,6 +17,7 @@ module.exports = [
   'till',
   'until',
   'or',
+  'on',
   'into',
   'outo'
 ]
