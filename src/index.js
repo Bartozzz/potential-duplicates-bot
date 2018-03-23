@@ -2,6 +2,11 @@ const punctuation = require('./dictionaries/punctuation')
 const synonyms = require('./dictionaries/synonyms')
 const excludes = require('./dictionaries/excluded')
 
+// If the similarity score is higher, the issue will be marked as a duplicate:
+const THRESHOLD = 0.60
+// How many points remove per missing word (see `compare()`):
+const ERROR_ADJ = 0.15
+
 /**
  * Removes punctuation and common words from a given phrase. Additionally, finds
  * and remplaces predefined synonyms for even faster and more accurate results.
@@ -9,7 +14,7 @@ const excludes = require('./dictionaries/excluded')
  * @param   {string}  phrase
  * @return  {string}
  */
-function preparePhrase (phrase) {
+function prepare (phrase) {
   phrase = phrase.toLowerCase()
 
   for (const punct of punctuation) {
@@ -99,11 +104,20 @@ function similarity (i, j) {
  *
  * 1. Preparation:
  *    Common words, punctuation symbols and synonyms are removed. Sentences are
- *    then split into separate words for further analysis.
+ *    then split into separate words for further analysis. We always operate on
+ *    the list which contains less words.
  * 2. Calculations:
  *    For each word in the first phrase, we try to find a analogue in the second
  *    one. This is done using the Damerau–Levenshtein distance algorithm. Words
  *    with the biggest probability of being an analogue are added to the list.
+ * 3. Error adjustment:
+ *    We calculate the difference between words amount in each phrase. For each
+ *    word, we remove a certain probability from the final score. This step is
+ *    necessary in situations where the first sentence contains only few word
+ *    and direct analogues in the second one. Without error adjustment, this
+ *    would give us a result of 1.0. For example:
+ *      A: "Testing module foo"
+ *      B: "Testing if there's not memory leak in module bar"
  *
  * @todo    include phrase-length difference in the observational error
  *
@@ -112,11 +126,10 @@ function similarity (i, j) {
  * @return  {float}
  */
 function compare (phraseA, phraseB) {
-  let wordsA = preparePhrase(phraseA).split(' ')
-  let wordsB = preparePhrase(phraseB).split(' ')
-  let sumOfProbs = 0
+  let wordsA = prepare(phraseA).split(' ')
+  let wordsB = prepare(phraseB).split(' ')
+  let total = 0
 
-  // To be sure that A contains less words than B:
   if (wordsA.length > wordsB.length) {
     [wordsA, wordsB] = [wordsB, wordsA]
   }
@@ -127,10 +140,15 @@ function compare (phraseA, phraseB) {
       temp.push(similarity(wordA, wordB))
     }
 
-    sumOfProbs += Math.max.apply(null, temp)
+    total += Math.max.apply(null, temp)
   }
 
-  return sumOfProbs / wordsA.length
+  // Direct score:
+  total /= wordsA.length
+  // Error adjustment:
+  total -= (wordsB.length - wordsA.length) * ERROR_ADJ
+
+  return total
 }
 
 module.exports = robot => {
@@ -153,7 +171,7 @@ module.exports = robot => {
 
         robot.log(`${issue.title} ~ ${title} = ${percentage}%`)
 
-        if (percentage >= 0.60) {
+        if (percentage >= THRESHOLD) {
           await markAsDuplicate(issue.number)
           return
         }
@@ -185,5 +203,7 @@ module.exports = robot => {
 
 module.exports.distance = distance
 module.exports.compare = compare
+module.exports.prepare = prepare
 module.exports.similarity = similarity
-module.exports.preparePhrase = preparePhrase
+module.exports.THRESHOLD = THRESHOLD
+module.exports.ERROR_ADJ = ERROR_ADJ

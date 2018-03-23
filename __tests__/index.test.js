@@ -1,15 +1,30 @@
 const distance = require('../src/index').distance
-const preparePhrase = require('../src/index').preparePhrase
+const compare = require('../src/index').compare
+const prepare = require('../src/index').prepare
+const THRESHOLD = require('../src/index').THRESHOLD
 
 test('Preparing phrase', () => {
   const tests = [
     ['Hello World', 'hello world'],
     ['Basic, punct. should - be removed.. ', 'basic punct should be removed '],
     ['the excluded words and stuff', 'excluded words stuff'],
-    ['application console terminal empty unfilled starter', 'app cli cli blank blank module']
+    ['application console terminal empty unfilled starter', 'app cli cli null null module']
   ]
 
-  tests.forEach(v => expect(preparePhrase(v[0])).toBe(v[1]))
+  tests.forEach(v => expect(prepare(v[0])).toBe(v[1]))
+})
+
+test('Comparing phrases', () => {
+  const tests = [
+    [true, 'testing issues', 'isues testin'],
+    [true, 'Basic example of issue duplicate', 'A basic example of an issue duplicate'],
+    [true, 'Console is empty when creating a new app with utility module', 'When creating an app with the starter, the terminal is blank'],
+    [true, 'Application module causes an error in the console when array unfilled', 'a error in the terminal is thrown on empty array when using app starter'],
+    [false, 'this is not a duplicate', 'should not be marked at all'],
+    [false, 'Lorem ipsum dolor sit amet', 'consectetur adipiscing elit']
+  ]
+
+  tests.forEach(v => expect(compare(v[1], v[2]) > THRESHOLD).toBe(v[0]))
 })
 
 test('Damerau–Levenshtein distance', () => {
