@@ -21,7 +21,7 @@ function preparePhrase (phrase) {
   }
 
   for (const exclude of excludes) {
-    phrase = phrase.replace(new RegExp(`${exclude} `, 'g'), '')
+    phrase = phrase.replace(new RegExp(`\\b${exclude}\\s\\b`, 'g'), '')
   }
 
   return phrase
